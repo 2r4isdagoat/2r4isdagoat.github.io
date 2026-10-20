@@ -195,17 +195,16 @@
     Search answers provided by DuckDuckGo's Instant Answer API.
   </div>
 
-  <script>
-    // Your deployed Cloudflare Worker URL.
-    const WORKER_URL =
-      "https://ddg-proxy.xanderisthemanxbox.workers.dev";
 
-    const form = document.getElementById("search-form");
-    const input = document.getElementById("search-input");
-    const resultsDiv = document.getElementById("results");
-    const statusDiv = document.getElementById("status");
-    const button = document.getElementById("search-btn");
+<script>
+const WORKER_URL =
+  "https://ddg-proxy.xanderisthemanxbox.workers.dev";
 
+const form = document.getElementById("search-form");
+const input = document.getElementById("search-input");
+const resultsDiv = document.getElementById("results");
+const statusDiv = document.getElementById("status");
+const button = document.getElementById("search-btn");
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -229,7 +228,6 @@ form.addEventListener("submit", async (event) => {
     );
 
     const body = await response.text();
-
     console.log("Worker status:", response.status);
     console.log("Worker response:", body);
 
@@ -238,15 +236,11 @@ form.addEventListener("submit", async (event) => {
     try {
       data = JSON.parse(body);
     } catch {
-      throw new Error(
-        "Worker returned HTML instead of JSON. Check the Worker URL and deployment."
-      );
+      throw new Error("Worker returned HTML instead of JSON.");
     }
 
     if (!response.ok || data.error) {
-      throw new Error(
-        data.error || `Request failed (${response.status})`
-      );
+      throw new Error(data.error || `Request failed (${response.status})`);
     }
 
     resultsDiv.replaceChildren();
@@ -276,235 +270,89 @@ form.addEventListener("submit", async (event) => {
   }
 });
 
+function renderResults(data) {
+  if (data.Abstract || data.Answer || data.Definition) {
+    const card = document.createElement("article");
+    card.className = "result-card";
 
-      const query = input.value.trim();
-      if (!query) return;
+    const heading = document.createElement("h2");
+    heading.textContent = data.Heading || "Instant Answer";
+    card.appendChild(heading);
 
-      button.disabled = true;
-      button.textContent = "Searching...";
-      statusDiv.textContent = "";
-      resultsDiv.replaceChildren();
+    const description = document.createElement("p");
+    description.textContent =
+      data.Abstract || data.Answer || data.Definition;
+    card.appendChild(description);
 
-      const loading = document.createElement("div");
-      loading.className = "loading";
-      loading.textContent = "Searching for " + query + "...";
-      resultsDiv.appendChild(loading);
+    if (data.AbstractURL) {
+      const link = createSafeLink(data.AbstractURL, "Read more");
+      if (link) card.appendChild(link);
+    }
 
-      try {
-        const response = await fetch(
-          `${WORKER_URL}/?q=${encodeURIComponent(query)}`
-        );
-const response = await fetch(
-  `${WORKER_URL}/?q=${encodeURIComponent(query)}`
-);
+    resultsDiv.appendChild(card);
+  }
 
-const body = await response.text();
+  flattenTopics(data.RelatedTopics || []).forEach((topic) => {
+    if (!topic.FirstURL || !topic.Text) return;
 
-console.log("Worker status:", response.status);
-console.log("Worker response:", body);
+    const card = document.createElement("article");
+    card.className = "result-card";
 
-let data;
+    const heading = document.createElement("h2");
+    const link = createSafeLink(topic.FirstURL, topic.Text);
 
-try {
-  data = JSON.parse(body);
-} catch {
-  throw new Error(
-    "Worker returned HTML instead of JSON. Check the Worker URL and deployed code."
-  );
+    if (!link) return;
+
+    heading.appendChild(link);
+    card.appendChild(heading);
+
+    if (topic.Result) {
+      const description = document.createElement("p");
+      description.textContent = stripHtml(topic.Result);
+      card.appendChild(description);
+    }
+
+    resultsDiv.appendChild(card);
+  });
 }
 
-if (!response.ok) {
-  throw new Error(data.error || `Request failed (${response.status})`);
+function flattenTopics(topics) {
+  const flat = [];
+
+  for (const topic of topics) {
+    if (Array.isArray(topic.Topics)) {
+      flat.push(...flattenTopics(topic.Topics));
+    } else if (topic.FirstURL && topic.Text) {
+      flat.push(topic);
+    }
+  }
+
+  return flat;
 }
 
-if (data.error) {
-  throw new Error(data.error);
+function createSafeLink(url, text) {
+  try {
+    const parsed = new URL(url);
+
+    if (!["https:", "http:"].includes(parsed.protocol)) return null;
+
+    const link = document.createElement("a");
+    link.href = parsed.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = stripHtml(text);
+    return link;
+  } catch {
+    return null;
+  }
 }
 
-renderResults(data);
+function stripHtml(value) {
+  const element = document.createElement("div");
+  element.textContent = value || "";
+  return element.textContent;
+}
+</script>
 
-        if (!response.ok || data.error) {
-          throw new Error(data.error || `Request failed (${response.status})`);
-        }
-
-        resultsDiv.replaceChildren();
-        renderResults(data);
-
-        if (resultsDiv.children.length === 0) {
-          const message = document.createElement("div");
-          message.className = "message";
-          message.textContent =
-            "No instant answers found. Try another query, or use a full web search provider.";
-          resultsDiv.appendChild(message);
-        } else {
-          statusDiv.textContent = "Results for: " + query;
-        }
-      } catch (error) {
-        resultsDiv.replaceChildren();
-
-        const message = document.createElement("div");
-        message.className = "message error";
-        message.textContent =
-          "Could not load results. " +
-          (error.message || "Please try again.");
-        resultsDiv.appendChild(message);
-      } finally {
-        button.disabled = false;
-        button.textContent = "Search";
-      }
-    });
-
-    function renderResults(data) {
-      // Main instant answer.
-      if (data.Abstract || data.Answer || data.Definition) {
-        const card = document.createElement("article");
-        card.className = "result-card";
-
-        const title = document.createElement("h2");
-        title.textContent =
-          data.Heading || "Instant Answer";
-        card.appendChild(title);
-
-        const text = document.createElement("p");
-        text.textContent =
-          data.Abstract || data.Answer || data.Definition;
-        card.appendChild(text);
-
-        if (data.AbstractURL) {
-          addLink(card, data.AbstractURL, "Read more");
-        }
-
-        resultsDiv.appendChild(card);
-      }
-
-      // Image, if supplied by the API.
-      if (data.Image) {
-        const imageUrl = safeHttpUrl(data.Image);
-
-        if (imageUrl) {
-          const card = document.createElement("article");
-          card.className = "result-card";
-
-          const image = document.createElement("img");
-          image.src = imageUrl;
-          image.alt = data.Heading || "Search result image";
-          image.loading = "lazy";
-          image.style.maxWidth = "100%";
-          image.style.height = "auto";
-
-          card.appendChild(image);
-          resultsDiv.appendChild(card);
-        }
-      }
-
-      // Related topics, including nested topic groups.
-      const topics = flattenTopics(data.RelatedTopics || []);
-
-      for (const topic of topics) {
-        if (!topic.FirstURL || !topic.Text) continue;
-
-        const card = document.createElement("article");
-        card.className = "result-card";
-
-        const title = document.createElement("h2");
-        const link = makeLink(topic.FirstURL, topic.Text);
-
-        if (!link) continue;
-
-        title.appendChild(link);
-        card.appendChild(title);
-
-        if (topic.Result) {
-          const description = document.createElement("p");
-          description.textContent = stripHtml(topic.Result);
-          card.appendChild(description);
-        }
-
-        card.querySelector("h2").appendChild(document.createTextNode(""));
-
-        resultsDiv.appendChild(card);
-      }
-
-      // Other useful API fields.
-      if (
-        data.AbstractURL &&
-        !data.Abstract &&
-        !data.Answer &&
-        !data.Definition
-      ) {
-        const card = document.createElement("article");
-        card.className = "result-card";
-
-        const title = document.createElement("h2");
-        const link = makeLink(
-          data.AbstractURL,
-          data.Heading || "More information"
-        );
-
-        if (link) {
-          title.appendChild(link);
-          card.appendChild(title);
-          resultsDiv.appendChild(card);
-        }
-      }
-    }
-
-    function flattenTopics(topics) {
-      const flat = [];
-
-      for (const topic of topics) {
-        if (Array.isArray(topic.Topics)) {
-          flat.push(...flattenTopics(topic.Topics));
-        } else if (topic.FirstURL && topic.Text) {
-          flat.push(topic);
-        }
-      }
-
-      return flat;
-    }
-
-    function safeHttpUrl(value) {
-      try {
-        const url = new URL(value, "https://duckduckgo.com");
-
-        if (url.protocol === "https:" || url.protocol === "http:") {
-          return url.href;
-        }
-      } catch {
-        // Ignore malformed URLs.
-      }
-
-      return null;
-    }
-
-    function makeLink(url, text) {
-      const safeUrl = safeHttpUrl(url);
-      if (!safeUrl) return null;
-
-      const anchor = document.createElement("a");
-      anchor.href = safeUrl;
-      anchor.target = "_blank";
-      anchor.rel = "noopener noreferrer";
-      anchor.className = "result-link";
-      anchor.textContent = stripHtml(text);
-
-      return anchor;
-    }
-
-    function addLink(container, url, text) {
-      const link = makeLink(url, text);
-      if (!link) return;
-
-      const paragraph = document.createElement("p");
-      paragraph.appendChild(link);
-      container.appendChild(paragraph);
-    }
-
-    function stripHtml(value) {
-      const element = document.createElement("div");
-      element.textContent = value || "";
-      return element.textContent;
-    }
-  </script>
 </body>
 </html>
