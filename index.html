@@ -3,356 +3,299 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f5f5">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10141d">
   <title>My Search</title>
 
   <style>
-    * {
-      box-sizing: border-box;
+    :root {
+      color-scheme: dark;
+      --bg: #10141d;
+      --panel: #191f2b;
+      --border: #30394b;
+      --text: #f2f5fa;
+      --muted: #a6b0c2;
+      --accent: #78a9ff;
     }
 
+    * { box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-        Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f5f5f5;
-      color: #222;
       margin: 0;
-      padding: 32px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+
+    .container {
+      width: min(850px, 92%);
+      margin: auto;
+      padding: 65px 0 45px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
     }
 
     h1 {
-      margin: 40px 0 24px;
-      font-size: 36px;
-      font-weight: 700;
+      margin: 0 0 8px;
+      font-size: clamp(38px, 7vw, 58px);
+      letter-spacing: -2px;
     }
 
-    .search-container {
-      width: 100%;
-      max-width: 650px;
-      margin-bottom: 24px;
-    }
+    .subtitle, footer { color: var(--muted); }
 
     form {
       display: flex;
       gap: 10px;
     }
 
-    input[type="text"] {
+    input {
       flex: 1;
       min-width: 0;
-      padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      color: var(--text);
       font-size: 16px;
-      outline: none;
-      background: white;
     }
 
-    input[type="text"]:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-    }
+    input:focus { outline: 2px solid var(--accent); }
 
     button {
-      padding: 12px 22px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
+      padding: 14px 22px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #10141d;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
     }
 
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    button:disabled {
-      background-color: #aaa;
-      cursor: wait;
-    }
+    button:disabled { opacity: .6; cursor: wait; }
 
     #status {
-      width: 100%;
-      max-width: 650px;
-      margin-bottom: 12px;
-      color: #666;
-      font-size: 14px;
-    }
-
-    #results {
-      width: 100%;
-      max-width: 650px;
-    }
-
-    .result-card {
-      background: white;
-      padding: 18px;
-      margin-bottom: 14px;
-      border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      margin: 18px 0;
+      color: var(--muted);
       overflow-wrap: anywhere;
     }
 
-    .result-card h2 {
-      margin: 0 0 8px;
-      font-size: 19px;
-      font-weight: 600;
+    .result {
+      padding: 18px;
+      margin: 14px 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel);
+      overflow-wrap: anywhere;
     }
 
-    .result-card h2 a,
-    .result-link {
-      color: #1a0dab;
-      text-decoration: none;
-    }
+    .result h2 { margin: 0 0 8px; font-size: 20px; }
+    .result h2 a { color: var(--accent); text-decoration: none; }
+    .result h2 a:hover { text-decoration: underline; }
+    .result p { margin: 8px 0; }
+    .result-url { color: #9ac9a8; font-size: 13px; }
 
-    .result-card h2 a:hover,
-    .result-link:hover {
-      text-decoration: underline;
-    }
-
-    .result-card p {
-      margin: 8px 0;
-      color: #444;
-      line-height: 1.6;
-    }
-
-    .result-url {
-      display: block;
-      margin-bottom: 8px;
-      color: #008000;
+    footer {
+      margin-top: 40px;
+      text-align: center;
       font-size: 13px;
     }
 
-    .loading,
-    .message {
-      text-align: center;
-      color: #666;
-      padding: 24px 12px;
-    }
-
-    .error {
-      color: #b42318;
-    }
-
-    .footer {
-      margin-top: auto;
-      padding-top: 32px;
-      color: #777;
-      font-size: 12px;
-      text-align: center;
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 20px 14px;
-      }
-
-      h1 {
-        margin-top: 32px;
-        font-size: 30px;
-      }
-
-      form {
-        gap: 7px;
-      }
-
-      button {
-        padding: 12px 15px;
-      }
+    @media (max-width: 520px) {
+      .container { padding-top: 40px; }
+      form { flex-direction: column; }
+      button { width: 100%; }
     }
   </style>
 </head>
 
 <body>
-  <h1>My Search</h1>
+  <main class="container">
+    <header>
+      <h1>My Search</h1>
+      <p class="subtitle">
+        Search for quick answers and related information.
+      </p>
+    </header>
 
-  <main class="search-container">
     <form id="search-form">
       <input
-        type="text"
         id="search-input"
+        type="search"
         placeholder="Search the web..."
         aria-label="Search query"
-        required
         maxlength="300"
-        autocomplete="off"
+        required
       >
-      <button type="submit" id="search-btn">Search</button>
+      <button id="search-btn" type="submit">Search</button>
     </form>
+
+    <p id="status" role="status" aria-live="polite">
+      Enter a search to get started.
+    </p>
+
+    <section id="results" aria-label="Search results"></section>
+
+    <footer>
+      Quick answers provided by DuckDuckGo's Instant Answer API.
+      This is not a full web search index.
+    </footer>
   </main>
 
-  <div id="status" role="status" aria-live="polite"></div>
-  <section id="results" aria-label="Search results"></section>
+  <script>
+    // Your actual Cloudflare Worker URL:
+    const WORKER_URL =
+      "https://ddg-json-api.xanderisthemanxbox.workers.dev";
 
-  <div class="footer">
-    Search answers provided by DuckDuckGo's Instant Answer API.
-  </div>
+    const form = document.getElementById("search-form");
+    const input = document.getElementById("search-input");
+    const results = document.getElementById("results");
+    const status = document.getElementById("status");
+    const button = document.getElementById("search-btn");
 
-
-<script>
-const WORKER_URL =
-  "https://ddg-proxy.xanderisthemanxbox.workers.dev";
-
-const form = document.getElementById("search-form");
-const input = document.getElementById("search-input");
-const resultsDiv = document.getElementById("results");
-const statusDiv = document.getElementById("status");
-const button = document.getElementById("search-btn");
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const query = input.value.trim();
-  if (!query) return;
-
-  button.disabled = true;
-  button.textContent = "Searching...";
-  statusDiv.textContent = "";
-  resultsDiv.replaceChildren();
-
-  const loading = document.createElement("div");
-  loading.className = "loading";
-  loading.textContent = "Searching for " + query + "...";
-  resultsDiv.appendChild(loading);
-
-  try {
-    const response = await fetch(
-      `${WORKER_URL}/?q=${encodeURIComponent(query)}`
-    );
-
-    const body = await response.text();
-    console.log("Worker status:", response.status);
-    console.log("Worker response:", body);
-
-    let data;
-
-    try {
-      data = JSON.parse(body);
-    } catch {
-      throw new Error("Worker returned HTML instead of JSON.");
+    function addText(parent, tag, text, className) {
+      const element = document.createElement(tag);
+      element.textContent = text;
+      if (className) element.className = className;
+      parent.appendChild(element);
+      return element;
     }
 
-    if (!response.ok || data.error) {
-      throw new Error(data.error || `Request failed (${response.status})`);
+    function addResult(title, description, url) {
+      const card = document.createElement("article");
+      card.className = "result";
+
+      if (url) {
+        try {
+          const parsed = new URL(url);
+
+          if (["https:", "http:"].includes(parsed.protocol)) {
+            const heading = document.createElement("h2");
+            const link = document.createElement("a");
+            link.href = parsed.href;
+            link.textContent = title;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            heading.appendChild(link);
+            card.appendChild(heading);
+            addText(card, "p", parsed.hostname, "result-url");
+          } else {
+            addText(card, "h2", title);
+          }
+        } catch {
+          addText(card, "h2", title);
+        }
+      } else {
+        addText(card, "h2", title);
+      }
+
+      if (description) addText(card, "p", description);
+      results.appendChild(card);
     }
 
-    resultsDiv.replaceChildren();
-    renderResults(data);
+    function flattenTopics(topics, output = []) {
+      if (!Array.isArray(topics)) return output;
 
-    if (resultsDiv.children.length === 0) {
-      const message = document.createElement("div");
-      message.className = "message";
-      message.textContent =
-        "No instant answers found. Try another search.";
-      resultsDiv.appendChild(message);
-    } else {
-      statusDiv.textContent = "Results for: " + query;
-    }
-  } catch (error) {
-    resultsDiv.replaceChildren();
+      for (const topic of topics) {
+        if (topic.Text && topic.FirstURL) output.push(topic);
+        if (Array.isArray(topic.Topics)) {
+          flattenTopics(topic.Topics, output);
+        }
+      }
 
-    const message = document.createElement("div");
-    message.className = "message error";
-    message.textContent = "Could not load results. " + error.message;
-    resultsDiv.appendChild(message);
-
-    console.error("Search error:", error);
-  } finally {
-    button.disabled = false;
-    button.textContent = "Search";
-  }
-});
-
-function renderResults(data) {
-  if (data.Abstract || data.Answer || data.Definition) {
-    const card = document.createElement("article");
-    card.className = "result-card";
-
-    const heading = document.createElement("h2");
-    heading.textContent = data.Heading || "Instant Answer";
-    card.appendChild(heading);
-
-    const description = document.createElement("p");
-    description.textContent =
-      data.Abstract || data.Answer || data.Definition;
-    card.appendChild(description);
-
-    if (data.AbstractURL) {
-      const link = createSafeLink(data.AbstractURL, "Read more");
-      if (link) card.appendChild(link);
+      return output;
     }
 
-    resultsDiv.appendChild(card);
-  }
+    function renderResults(data) {
+      results.replaceChildren();
+      let count = 0;
 
-  flattenTopics(data.RelatedTopics || []).forEach((topic) => {
-    if (!topic.FirstURL || !topic.Text) return;
+      if (data.AbstractText) {
+        addResult(
+          data.Heading || "Quick answer",
+          data.AbstractText,
+          data.AbstractURL || ""
+        );
+        count++;
+      }
 
-    const card = document.createElement("article");
-    card.className = "result-card";
+      if (data.Answer) {
+        addResult("Answer", data.Answer, "");
+        count++;
+      }
 
-    const heading = document.createElement("h2");
-    const link = createSafeLink(topic.FirstURL, topic.Text);
+      if (data.Definition) {
+        addResult(
+          data.DefinitionSource || "Definition",
+          data.Definition,
+          data.DefinitionURL || ""
+        );
+        count++;
+      }
 
-    if (!link) return;
+      for (const topic of flattenTopics(data.RelatedTopics || [])) {
+        if (count >= 15) break;
+        addResult(topic.Text, "", topic.FirstURL);
+        count++;
+      }
 
-    heading.appendChild(link);
-    card.appendChild(heading);
+      if (count === 0) {
+        addText(
+          results,
+          "p",
+          "No instant answers were found. Try a different search."
+        );
+      }
 
-    if (topic.Result) {
-      const description = document.createElement("p");
-      description.textContent = stripHtml(topic.Result);
-      card.appendChild(description);
+      status.textContent = count
+        ? `Found ${count} answer(s) or related topic(s).`
+        : "No quick answers found.";
     }
 
-    resultsDiv.appendChild(card);
-  });
-}
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const query = input.value.trim();
+      if (!query) return;
 
-function flattenTopics(topics) {
-  const flat = [];
+      button.disabled = true;
+      button.textContent = "Searching...";
+      status.textContent = "Searching...";
+      results.replaceChildren();
 
-  for (const topic of topics) {
-    if (Array.isArray(topic.Topics)) {
-      flat.push(...flattenTopics(topic.Topics));
-    } else if (topic.FirstURL && topic.Text) {
-      flat.push(topic);
-    }
-  }
+      try {
+        const endpoint = new URL(WORKER_URL);
+        endpoint.searchParams.set("q", query);
 
-  return flat;
-}
+        const response = await fetch(endpoint.toString());
+        const body = await response.text();
 
-function createSafeLink(url, text) {
-  try {
-    const parsed = new URL(url);
+        if (!response.ok) {
+          throw new Error(`Worker returned HTTP ${response.status}.`);
+        }
 
-    if (!["https:", "http:"].includes(parsed.protocol)) return null;
+        let data;
+        try {
+          data = JSON.parse(body);
+        } catch {
+          throw new Error(
+            "Worker returned HTML instead of JSON. Check the deployed Worker and URL."
+          );
+        }
 
-    const link = document.createElement("a");
-    link.href = parsed.href;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = stripHtml(text);
-    return link;
-  } catch {
-    return null;
-  }
-}
-
-function stripHtml(value) {
-  const element = document.createElement("div");
-  element.textContent = value || "";
-  return element.textContent;
-}
-</script>
-
+        if (data.error) throw new Error(data.error);
+        renderResults(data);
+      } catch (error) {
+        console.error("Search error:", error);
+        status.textContent = "Could not load results: " + error.message;
+      } finally {
+        button.disabled = false;
+        button.textContent = "Search";
+      }
+    });
+  </script>
 </body>
 </html>
